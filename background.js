@@ -1,8 +1,10 @@
 /* 
-  Copyright 2018. Jefferson "jscher2000" Scher. License: MPL-2.0.
+  Copyright 2020. Jefferson "jscher2000" Scher. License: MPL-2.0.
   version 0.1 - initial concept
   version 0.2 - added icons
   version 0.3 - updated icons
+  version 0.4 - open new tab next to current page
+  version 0.5 - handle multi-argument mailto links
 */
 
 const baseUrl = 'https://mrd.mail.yahoo.com/compose/?';
@@ -46,7 +48,33 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 			// Check the link protocol
 			var linkSplit = menuInfo.linkUrl.split(':');
 			if (linkSplit[0].toLowerCase() === 'mailto'){ // this is a mailto link
-				YUrl = baseUrl + 'to=' + encodeURIComponent(linkSplit[1]);
+				linkSplit = linkSplit[1].split('?');
+				YUrl = baseUrl + 'to=' + encodeURIComponent(linkSplit[0]);
+				// handle additional mailto parameters (0.5)
+				if (linkSplit.length > 1){
+					for (var i=1; i<linkSplit.length; i++){
+						var argSplit = linkSplit[i].split('&');
+						for (var j=0; j<argSplit.length; j++){
+							var param = argSplit[j].split('=');
+							switch (param[0].toLowerCase()) {
+								case 'cc':
+									YUrl += '&cc=' + encodeURIComponent(param[1]);
+									break;
+								case 'bcc':
+									YUrl += '&bcc=' + encodeURIComponent(param[1]);
+									break;
+								case 'subject':
+									YUrl += '&subject=' + encodeURIComponent(param[1]);
+									break;
+								case 'body':
+									YUrl += '&body=' + encodeURIComponent(param[1]);
+									break;
+								default:
+									// ignore other parameters for now
+							}
+						}
+					}
+				}
 			} else {	// this is not a mailto link
 				// Share link
 				console.log('What do to with this: '+menuInfo.linkUrl+'; text:'+menuInfo.linkText);
@@ -64,7 +92,10 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 			if (menuInfo.linkUrl){
 				var linkSplit = menuInfo.linkUrl.split(':');
 				if (linkSplit[0].toLowerCase() === 'mailto'){ // this is a mailto link
-					YUrl += 'to=' + encodeURIComponent(linkSplit[1]) + '&';
+					linkSplit = linkSplit[1].split('?');
+					YUrl = baseUrl + 'to=' + encodeURIComponent(linkSplit[0]);
+					// do not add mailto parameters because are going to get those from the page
+					YUrl += '&';
 				}
 			}
 			// this is Email Link for the page when text is selected
@@ -80,6 +111,7 @@ browser.menus.onClicked.addListener((menuInfo, currTab) => {
 	if (YUrl.length > 0){
 		browser.tabs.create({
 			url: YUrl,
+			index: currTab.index + 1,
 			active: true
 		}).then((newTab) => {
 			/* No action */;

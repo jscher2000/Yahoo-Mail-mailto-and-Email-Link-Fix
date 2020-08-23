@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "Yahoo Mail - mailto and Email Link Fix",
 	"description": "Right-click context menu item to compose a new message in Yahoo mail from another site. Not an official Yahoo add-on.",
-	"version": "0.3",
+	"version": "0.5",
 	"applications":{
 		"gecko": {
 			"id": "{3d0ca62e-8ceb-4d7e-9706-65e31f3049ec}",
